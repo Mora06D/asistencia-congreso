@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Consulta de Catering | Congreso SEBBM 2025</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #f5f7fa;
+      color: #2c3e50;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+      padding: 2rem;
+      flex: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      color: #2c3e50;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 2rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+
+    .info-group {
+      margin-bottom: 1.2rem;
+    }
+
+    .info-label {
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+      color: #34495e;
+    }
+
+    .info-value {
+      font-size: 1.1rem;
+      background: #ecf0f1;
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+    }
+
+    .message {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 6px;
+      background: #fbeee6;
+      color: #e67e22;
+      font-weight: 500;
+    }
+
+    .success {
+      background: #d5edda;
+      color: #155724;
+    }
+
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .catering-info {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #e8f5e8;
+      border-radius: 6px;
+      border-left: 4px solid #28a745;
+    }
+
+    .catering-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .catering-item:last-child {
+      border-bottom: none;
+    }
+
+    .catering-label {
+      font-weight: 600;
+      color: #495057;
+    }
+
+    .catering-status {
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .status-si {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-no {
+      background: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Consulta de Catering</h1>
+      <p>47º Congreso SEBBM 2025</p>
+    </header>
+
+    <main>
+      <div id="infoCard" class="card" style="display: none;">
+        <div class="info-group">
+          <div class="info-label">Participante</div>
+          <div class="info-value" id="nombre"></div>
+        </div>
+        
+        <div class="catering-info">
+          <h3 style="margin-top: 0; color: #28a745;">Servicios de Catering</h3>
+          
+          <div class="catering-item">
+            <span class="catering-label">Bocata</span>
+            <span class="catering-status" id="bocata-status"></span>
+          </div>
+          
+          <div class="catering-item">
+            <span class="catering-label">Cena de Gala</span>
+            <span class="catering-status" id="gala-status"></span>
+          </div>
+        </div>
+      </div>
+
+      <div id="mensaje" class="message" style="display: none;"></div>
+    </main>
+  </div>
+
+  <script>
+    const id = new URLSearchParams(window.location.search).get("id");
+
+    function mostrarMensaje(texto, tipo = 'info') {
+      const msg = document.getElementById("mensaje");
+      msg.textContent = texto;
+      msg.className = `message ${tipo}`;
+      msg.style.display = "block";
+      
+      // Ocultar la tarjeta si hay error
+      if (tipo === 'error') {
+        document.getElementById("infoCard").style.display = "none";
+      }
+    }
+
+    function parsearDatos(texto) {
+      // Parsear el texto que viene en formato "Nombre: X\nBocata: Y\nGala: Z"
+      const lineas = texto.split('\n');
+      const datos = {};
+      
+      lineas.forEach(linea => {
+        const [clave, ...valor] = linea.split(': ');
+        if (clave && valor.length > 0) {
+          datos[clave.trim()] = valor.join(': ').trim();
+        }
+      });
+      
+      return datos;
+    }
+
+    function mostrarEstado(valor) {
+      if (valor === 'Sí' || valor === 'Si' || valor === 'sí' || valor === 'si') {
+        return { texto: 'Sí', clase: 'status-si' };
+      } else {
+        return { texto: 'No', clase: 'status-no' };
+      }
+    }
+
+    function mostrarDatos(datos) {
+      document.getElementById("nombre").textContent = datos['Nombre'] || 'No disponible';
+      
+      // Mostrar estado del bocata
+      const bocataStatus = mostrarEstado(datos['Bocadillo']);
+      const bocataElement = document.getElementById("bocata-status");
+      bocataElement.textContent = bocataStatus.texto;
+      bocataElement.className = `catering-status ${bocataStatus.clase}`;
+      
+      // Mostrar estado de la gala
+      const galaStatus = mostrarEstado(datos['Cena de gala']);
+      const galaElement = document.getElementById("gala-status");
+      galaElement.textContent = galaStatus.texto;
+      galaElement.className = `catering-status ${galaStatus.clase}`;
+      
+      document.getElementById("infoCard").style.display = "block";
+      document.getElementById("mensaje").style.display = "none";
+    }
+
+    async function cargarDatos() {
+      if (!id) {
+        mostrarMensaje("❌ Falta el parámetro 'id' en la URL.", 'error');
+        return;
+      }
+
+      mostrarMensaje("🔄 Cargando datos...", 'info');
+
+      try {
+        const response = await fetch(`https://script.google.com/macros/s/AKfycbzvaY46kg-iVXn8f3CBOLL_ztBs7Dbgyt9WiTbEwjf6Vc982tCAUcZVlg5kpVOuqv5u/exec?id=${id}&catering=true`);
+        const datos = await response.text();
+        console.log("Datos recibidos del servidor:", datos);    
+
+        // Verificar si es un mensaje de error
+        if (datos.includes('❌')) {
+          mostrarMensaje(datos, 'error');
+          return;
+        }
+
+        // Si los datos contienen el formato esperado, parsearlos
+        if (datos.includes('Nombre:') && (datos.includes('Bocadillo:') || datos.includes('Cena de gala:'))) {
+          const datosParsados = parsearDatos(datos);
+          mostrarDatos(datosParsados);
+        } else {
+          mostrarMensaje("❌ Formato de datos inesperado.", 'error');
+        }
+
+      } catch (error) {
+        mostrarMensaje("❌ Error al conectar con el servidor.", 'error');
+        console.error(error);
+      }
+    }
+
+    // Cargar datos al iniciar la página
+    cargarDatos();
+  </script>
+</body>
+</html>
