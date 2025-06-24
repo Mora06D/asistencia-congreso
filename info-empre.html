@@ -130,25 +130,21 @@
       msg.textContent = texto;
       msg.className = `message ${tipo}`;
       msg.style.display = "block";
-      
-      // Ocultar la tarjeta si hay error
+
       if (tipo === 'error') {
         document.getElementById("infoCard").style.display = "none";
       }
     }
 
     function parsearDatos(texto) {
-      // Parsear el texto que viene en formato "Nombre: X\nEmail: Y\nAfiliación: Z"
       const lineas = texto.split('\n');
       const datos = {};
-      
       lineas.forEach(linea => {
         const [clave, ...valor] = linea.split(': ');
         if (clave && valor.length > 0) {
           datos[clave.trim()] = valor.join(': ').trim();
         }
       });
-      
       return datos;
     }
 
@@ -156,7 +152,7 @@
       document.getElementById("nombre").textContent = datos['Nombre'] || 'No disponible';
       document.getElementById("mail").textContent = datos['Email'] || 'No disponible';
       document.getElementById("afiliacion").textContent = datos['Afiliación'] || 'No disponible';
-      
+
       document.getElementById("infoCard").style.display = "block";
       document.getElementById("mensaje").style.display = "none";
     }
@@ -170,26 +166,33 @@
       mostrarMensaje("🔄 Cargando datos...", 'info');
 
       try {
-        const response = await fetch(`https://script.google.com/macros/s/AKfycbzvaY46kg-iVXn8f3CBOLL_ztBs7Dbgyt9WiTbEwjf6Vc982tCAUcZVlg5kpVOuqv5u/exec?id=${id}&info=true`);
-        const datos = await response.text();
-        console.log("Datos recibidos del servidor:", datos);    
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 7000); // 7s máx
 
-        // Verificar si es un mensaje de error
-        if (datos.includes('❌')) {
-          mostrarMensaje(datos, 'error');
+        const response = await fetch(`https://script.google.com/macros/s/AKfycbzvaY46kg-iVXn8f3CBOLL_ztBs7Dbgyt9WiTbEwjf6Vc982tCAUcZVlg5kpVOuqv5u/exec?id=${id}&info=true`, {
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          mostrarMensaje(`❌ Error del servidor: ${response.status}`, 'error');
           return;
         }
 
-        // Si los datos contienen el formato esperado, parsearlos
-        if (datos.includes('Nombre:') && datos.includes('Email:')) {
+        const datos = await response.text();
+        console.log("Datos recibidos del servidor:", datos);
+
+        if (datos.includes('❌')) {
+          mostrarMensaje(datos, 'error');
+        } else if (datos.includes('Nombre:') && datos.includes('Email:')) {
           const datosParsados = parsearDatos(datos);
           mostrarDatos(datosParsados);
         } else {
           mostrarMensaje("❌ Formato de datos inesperado.", 'error');
         }
-
       } catch (error) {
-        mostrarMensaje("❌ Error al conectar con el servidor.", 'error');
+        mostrarMensaje("❌ Error al conectar con el servidor o tiempo de espera agotado.", 'error');
         console.error(error);
       }
     }
@@ -205,7 +208,6 @@
       });
     }
 
-    // Cargar datos al iniciar la página
     cargarDatos();
   </script>
 </body>
