@@ -118,6 +118,18 @@
       background: #f8d7da;
       color: #721c24;
     }
+
+    #confirmarBocataBtn {
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -147,6 +159,8 @@
             <span class="catering-status" id="gala-status"></span>
           </div>
         </div>
+
+        <button id="confirmarBocataBtn">Confirmar Bocata</button>
       </div>
 
       <div id="mensaje" class="message" style="display: none;"></div>
@@ -162,24 +176,20 @@
       msg.className = `message ${tipo}`;
       msg.style.display = "block";
       
-      // Ocultar la tarjeta si hay error
       if (tipo === 'error') {
         document.getElementById("infoCard").style.display = "none";
       }
     }
 
     function parsearDatos(texto) {
-      // Parsear el texto que viene en formato "Nombre: X\nBocata: Y\nGala: Z"
       const lineas = texto.split('\n');
       const datos = {};
-      
       lineas.forEach(linea => {
         const [clave, ...valor] = linea.split(': ');
         if (clave && valor.length > 0) {
           datos[clave.trim()] = valor.join(': ').trim();
         }
       });
-      
       return datos;
     }
 
@@ -194,13 +204,11 @@
     function mostrarDatos(datos) {
       document.getElementById("nombre").textContent = datos['Nombre'] || 'No disponible';
       
-      // Mostrar estado del bocata
       const bocataStatus = mostrarEstado(datos['Bocadillo']);
       const bocataElement = document.getElementById("bocata-status");
       bocataElement.textContent = bocataStatus.texto;
       bocataElement.className = `catering-status ${bocataStatus.clase}`;
       
-      // Mostrar estado de la gala
       const galaStatus = mostrarEstado(datos['Cena de gala']);
       const galaElement = document.getElementById("gala-status");
       galaElement.textContent = galaStatus.texto;
@@ -208,6 +216,7 @@
       
       document.getElementById("infoCard").style.display = "block";
       document.getElementById("mensaje").style.display = "none";
+      document.getElementById("confirmarBocataBtn").style.display = "inline-block";
     }
 
     async function cargarDatos() {
@@ -223,13 +232,11 @@
         const datos = await response.text();
         console.log("Datos recibidos del servidor:", datos);    
 
-        // Verificar si es un mensaje de error
         if (datos.includes('❌')) {
           mostrarMensaje(datos, 'error');
           return;
         }
 
-        // Si los datos contienen el formato esperado, parsearlos
         if (datos.includes('Nombre:') && (datos.includes('Bocadillo:') || datos.includes('Cena de gala:'))) {
           const datosParsados = parsearDatos(datos);
           mostrarDatos(datosParsados);
@@ -243,7 +250,25 @@
       }
     }
 
-    // Cargar datos al iniciar la página
+    document.getElementById("confirmarBocataBtn").addEventListener("click", async () => {
+      const boton = document.getElementById("confirmarBocataBtn");
+      boton.style.display = "none";
+
+      try {
+        const response = await fetch(`https://script.google.com/macros/s/AKfycbzvaY46kg-iVXn8f3CBOLL_ztBs7Dbgyt9WiTbEwjf6Vc982tCAUcZVlg5kpVOuqv5u/exec?id=${id}&bocata=true`);
+        const texto = await response.text();
+
+        if (texto.includes("❌")) {
+          mostrarMensaje(texto, 'error');
+        } else {
+          mostrarMensaje("✔️ Confirmación enviada correctamente.", 'success');
+          await cargarDatos();
+        }
+      } catch (error) {
+        mostrarMensaje("❌ Error al enviar la confirmación del bocata.", 'error');
+      }
+    });
+
     cargarDatos();
   </script>
 </body>
