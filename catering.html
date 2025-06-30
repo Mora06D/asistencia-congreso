@@ -197,7 +197,8 @@
       if (valor === 'Sí' || valor === 'Si' || valor === 'sí' || valor === 'si') {
         return { texto: 'Sí', clase: 'status-si' };
       } else {
-        return { texto: 'No', clase: 'status-no' };
+        
+        return { texto: valor , clase: 'status-no' };
       }
     }
 
